@@ -1,3 +1,5 @@
+# module: audit
+
 class Audit < Thor
   desc "queries", "Audit the SQL queries run during this Rails app's test."
   method_options :units => :boolean, :v => :boolean
