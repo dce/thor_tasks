@@ -1,11 +1,9 @@
 # module: flog
 class Flog < Thor
-  desc "dir DIR", "flog the specified directory"
+  desc "dir DIRS", "flog the specified directories"
   
-  method_options :rails => :boolean
-  def dir(dir, opts)
-    dir = 'app' if opt['rails']
-    dir = '.' if dirs.empty?
-    system "find #{dir} -name \\*.rb | xargs flog"
+  def dir(*dirs)
+    dirs = ['.'] if dirs.empty?
+    system "find #{dirs.join(' ')} -name \\*.rb | xargs flog"
   end
 end
