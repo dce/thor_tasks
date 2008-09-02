@@ -52,7 +52,7 @@ class Ubuntu < Thor
     puts "You will not be asked to enter anything else. I can finish up on my own."
     ask "Press ENTER to continue."
     
-    passenger_root = `passenger-config --root`
+    passenger_root = `passenger-config --root`.chomp
     File.open('passenger.load', 'w') { |f|
       f.write(PASSENGER_LOAD.gsub(/ROOT/, passenger_root))
     }
@@ -93,7 +93,7 @@ class Ubuntu < Thor
 end
 
 
-PASSENGER_LOAD = "LoadModule passenger_module ROOT/ext/apache2/mod_passenger.so"
+PASSENGER_LOAD = "LoadModule passenger_module ROOT/ext/apache2/mod_passenger.so\n"
 PASSENGER_CONF = <<EOF
 PassengerRoot ROOT
 PassengerRuby /usr/bin/ruby1.8
