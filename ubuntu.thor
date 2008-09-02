@@ -26,8 +26,8 @@ class Ubuntu < Thor
       ssh.exec!("cd rubygems-* && (#{sudo 'ruby setup.rb'}) && cd ..")
       ssh.exec!(sudo 'ln -s /usr/bin/gem1.8 /usr/bin/gem')
       
-      puts "Installing thor..."
-      ssh.exec!(sudo 'gem install thor')
+      puts "Installing thor and gems..."
+      ssh.exec!(sudo 'gem install thor net-ssh net-sftp highline')
       ssh.exec!('wget -O ubuntu.thor http://github.com/crnixon/thor_tasks/tree/master/ssh.thor?raw=true')
       puts "Log into the server and run 'thor ubuntu:provision' to continue."
     end
