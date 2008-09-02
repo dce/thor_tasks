@@ -1,5 +1,22 @@
 # module: ubuntu
 
+# This script is meant to be used to provision a new Ubuntu server for
+# Rails and Rack apps using Passenger. It is split into two parts:
+# one to run remotely to start the process, and one to run on the machine.
+# The latter can be run on an Ubuntu box that already has Ruby and Thor on
+# it.
+#
+# Things this does:
+# - installs Ruby
+# - installs Apache 2
+# - installs MySQL
+# - installs Passenger
+# - adds a Passenger Apache conf and enables the module
+# - installs logrotate, git, and git-svn
+# - installs RMagick
+# - installs Rails
+# - installs god, and creates an init file for it
+
 class Ubuntu < Thor
   require 'net/ssh'
   require 'highline/import'
@@ -45,7 +62,7 @@ class Ubuntu < Thor
     puts "There will be several prompts coming up. Stick around until we let you know it's safe to leave."
     ask "Press ENTER to continue."
     
-    system apt(%w(libmysql++-dev mysql-server apache2-mpm-prefork apache2-prefork-dev))
+    system apt(%w(libmysql++-dev mysql-server apache2-mpm-prefork apache2-prefork-dev ruby1.8-dev))
     system sudo('gem install passenger')
     system sudo('passenger-install-apache2-module')
     
@@ -75,6 +92,7 @@ class Ubuntu < Thor
     File.open('default-god', 'w') { |f| f.write '/etc/god.conf' }
     system sudo("mv default-god /etc/default/god")
     system sudo("touch /etc/god.conf")
+    system sudo("update-rc.d god defaults")
   end
   
   private
