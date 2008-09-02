@@ -6,8 +6,13 @@
 # The latter can be run on an Ubuntu box that already has Ruby and Thor on
 # it.
 #
+# Usage:
+#   thor ubuntu:remote_provision HOST
+#   ssh HOST
+#   thor ubuntu:provision
+#
 # Things this does:
-# - installs Ruby
+# - installs Ruby, Rubygems, and Thor
 # - installs Apache 2
 # - installs MySQL
 # - installs Passenger
@@ -50,7 +55,7 @@ class Ubuntu < Thor
       
       puts "Installing thor and gems..."
       ssh.exec!(sudo('gem install thor net-ssh net-sftp highline'))
-      ssh.exec!('wget -O ubuntu.thor http://github.com/crnixon/thor_tasks/tree/master/ubuntu.thor?raw=true')
+      ssh.exec!('wget -nv -O ubuntu.thor http://github.com/crnixon/thor_tasks/tree/master/ubuntu.thor?raw=true')
       puts "Log into the server and run 'thor ubuntu:provision' to continue."
     end
   end
