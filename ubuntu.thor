@@ -45,14 +45,14 @@ class Ubuntu < Thor
     puts "There will be several prompts coming up. Stick around until we let you know it's safe to leave."
     ask "Press ENTER to continue."
     
-    system apt(%w(mysql-server apache2-prefork-dev))
+    system apt(%w(libmysql++-dev mysql-server apache2-mpm-prefork apache2-prefork-dev))
     system sudo('gem install passenger')
     system sudo('passenger-install-apache2-module')
     
     puts "You will not be asked to enter anything else. I can finish up on my own."
     ask "Press ENTER to continue."
         
-    system apt(%w(apache2-mpm-prefork libmysql++-dev librmagick-ruby))
+    system apt(%w(librmagick-ruby))
     
     gems = %w(rails mongrel mongrel_cluster)
     system sudo("gem install #{gems.join(' ')}")
