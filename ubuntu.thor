@@ -11,11 +11,15 @@ class Ubuntu < Thor
     @password = opts['password'] || ask("Enter your password on the remote server: ") { |q| q.echo = false }
     
     Net::SSH.start(server, @username, :password => @password) do |ssh|
+      puts "Updating Ubuntu (this may take a while)..."
+      ssh.exec!(sudo('aptitude update'))
+      ssh.exec!(sudo('aptitude full-upgrade'))
+      
       puts "Installing essential development packages..."
-      ssh.exec!(sudo 'aptitude -y -q install build-essential libssl-dev libreadline5-dev zlib1g-dev curl')
+      ssh.exec!(apt(%w(build-essential libssl-dev libreadline5-dev zlib1g-dev curl)))
       
       puts "Installing ruby..."
-      ssh.exec!(sudo 'aptitude -y -q install ruby libruby irb ri')
+      ssh.exec!(apt(%w(ruby ruby1.8-dev irb ri libopenssl-ruby)))
       
       puts "Downloading rubygems..."
       ssh.exec!('wget -nv http://rubyforge.org/frs/download.php/38646/rubygems-1.2.0.tgz')
@@ -24,28 +28,38 @@ class Ubuntu < Thor
       ssh.exec!('tar zxvf rubygems-*.tgz')
       ssh.exec!('rm rubygems-*.tgz')
       ssh.exec!("cd rubygems-* && (#{sudo 'ruby setup.rb'}) && cd ..")
-      ssh.exec!(sudo 'ln -s /usr/bin/gem1.8 /usr/bin/gem')
+      ssh.exec!(sudo('ln -s /usr/bin/gem1.8 /usr/bin/gem'))
+      ssh.exec!("echo 'gem: --no-ri --no-rdoc' > .gemrc")
       
       puts "Installing thor and gems..."
-      ssh.exec!(sudo 'gem install thor net-ssh net-sftp highline')
-      ssh.exec!('wget -O ubuntu.thor http://github.com/crnixon/thor_tasks/tree/master/ssh.thor?raw=true')
+      ssh.exec!(sudo('gem install thor net-ssh net-sftp highline'))
+      ssh.exec!('wget -O ubuntu.thor http://github.com/crnixon/thor_tasks/tree/master/ubuntu.thor?raw=true')
       puts "Log into the server and run 'thor ubuntu:provision' to continue."
     end
   end
 
   desc "provision", "Provision an Ubuntu server for running Ruby on Rails applications with Apache and Passenger or Mongrel. Assumes Ruby and thor are installed."
   def provision
-    system "sudo aptitude -y -q install mysql-server libmysql++-dev"
-    system "sudo aptitude -y -q install imagemagick libmagick++-dev"
-    system "sudo aptitude -y -q install apache2 apache2-dev"
-    system "sudo gem install rmagick"
-    system "sudo gem install rails"
-    system "sudo gem install passenger"
+    pkgs = %w(mysql-server libmysql++-dev apache2 apache2-dev apache2-prefork-dev librmagick-ruby)
+    system apt(pkgs)
+    
+    gems = %w(rails passenger mongrel mongrel_cluster)
+    system sudo("gem install #{gems.join(' ')}")
+
+    system sudo('passenger-install-apache2-module')
   end
   
   private
   
-  def sudo(command)
-    "echo #{@password} | sudo -S #{command}"
+  def sudo(cmd)
+    if @password
+      "echo #{@password} | sudo -S #{cmd}"
+    else
+      "sudo #{cmd}"
+    end
+  end
+  
+  def apt(*pkgs)
+    sudo "aptitude -y -q install #{pkgs.flatten.join(' ')}"
   end
 end
