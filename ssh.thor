@@ -7,8 +7,8 @@ class Ssh < Thor
   desc "install_key HOSTNAME", "installs your public key on the remote host."
   method_options :username => :optional, :password => :optional, :key => :optional
   def install_key(host, opts)
-    username = opts['username'] or ask("Enter your username: ") { |q| q.default = ENV['USER'] }
-    password = opts['password'] or ask("Enter your password: ") { |q| q.echo = false }
+    username = opts['username'] || ask("Enter your username: ") { |q| q.default = ENV['USER'] }
+    password = opts['password'] || ask("Enter your password: ") { |q| q.echo = false }
     key = opts['key'] or ask("Enter your key file location: ") { |q| q.default = '~/.ssh/id_rsa.pub' }
     key = File.expand_path(key)
     
