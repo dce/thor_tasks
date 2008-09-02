@@ -40,13 +40,23 @@ class Ubuntu < Thor
 
   desc "provision", "Provision an Ubuntu server for running Ruby on Rails applications with Apache and Passenger or Mongrel. Assumes Ruby and thor are installed."
   def provision
-    pkgs = %w(mysql-server libmysql++-dev apache2 apache2-dev apache2-prefork-dev librmagick-ruby)
+    # Put all the noisy ones at the beginning so you can leave it alone for 
+    # as long as possible afterwards.
+    puts "There will be several prompts coming up. Stick around until we let you know it's safe to leave."
+    ask "Press ENTER to continue."
+    
+    system apt('mysql-server')
+    system sudo('gem install passenger')
+    system sudo('passenger-install-apache2-module')
+    
+    puts "You will not be asked to enter anything else. I can finish up on my own."
+    ask "Press ENTER to continue."
+        
+    pkgs = %w(libmysql++-dev apache2-mpm-prefork apache2-prefork-dev librmagick-ruby)
     system apt(pkgs)
     
-    gems = %w(rails passenger mongrel mongrel_cluster)
+    gems = %w(rails mongrel mongrel_cluster)
     system sudo("gem install #{gems.join(' ')}")
-
-    system sudo('passenger-install-apache2-module')
   end
   
   private
