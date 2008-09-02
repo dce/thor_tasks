@@ -9,7 +9,7 @@ class Ssh < Thor
   def install_key(host, opts)
     username = opts['username'] || ask("Enter your username: ") { |q| q.default = ENV['USER'] }
     password = opts['password'] || ask("Enter your password: ") { |q| q.echo = false }
-    key = opts['key'] or ask("Enter your key file location: ") { |q| q.default = '~/.ssh/id_rsa.pub' }
+    key = opts['key'] || ask("Enter your key file location: ") { |q| q.default = '~/.ssh/id_rsa.pub' }
     key = File.expand_path(key)
     
     Net::SFTP.start(host, username, :password => password) do |sftp|
