@@ -58,7 +58,7 @@ class Ubuntu < Thor
     gems = %w(rails mongrel mongrel_cluster god)
     system sudo("gem install #{gems.join(' ')}")
     
-    File.open('/tmp/god.init') do |file|
+    File.open('/tmp/god.init', 'w') do |file|
       file.write GOD_INIT_FILE
     end
     
