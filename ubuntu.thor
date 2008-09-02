@@ -58,14 +58,11 @@ class Ubuntu < Thor
     gems = %w(rails mongrel mongrel_cluster god)
     system sudo("gem install #{gems.join(' ')}")
     
-    File.open('/tmp/god.init', 'w') do |file|
-      file.write GOD_INIT_SCRIPT
-    end
-    
-    system sudo("mv /tmp/god.init /etc/init.d/god")
+    File.open('god.init', 'w') { |f| f.write GOD_INIT_SCRIPT }
+    system sudo("mv god.init /etc/init.d/god")
     system sudo("chmod +x /etc/init.d/god")
-    system "echo '/etc/god.conf' > /tmp/god"
-    system sudo("mv /tmp/god /etc/defaults/god")
+    File.open('default-god', 'w') { |f| f.write '/etc/god.conf' }
+    system sudo("mv default-god /etc/default/god")
     system sudo("touch /etc/god.conf")
   end
   
