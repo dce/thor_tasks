@@ -59,7 +59,7 @@ class Ubuntu < Thor
     system sudo("gem install #{gems.join(' ')}")
     
     File.open('/tmp/god.init', 'w') do |file|
-      file.write GOD_INIT_FILE
+      file.write GOD_INIT_SCRIPT
     end
     
     system sudo("mv /tmp/god.init /etc/init.d/god")
@@ -83,6 +83,11 @@ class Ubuntu < Thor
     sudo "aptitude -y -q install #{pkgs.flatten.join(' ')}"
   end
 end
+
+# LoadModule passenger_module /usr/lib/ruby/gems/1.8/gems/passenger-2.0.3/ext/apache2/mod_passenger.so
+#    PassengerRoot /usr/lib/ruby/gems/1.8/gems/passenger-2.0.3
+#    PassengerRuby /usr/bin/ruby1.8
+
 
 GOD_INIT_SCRIPT = <<EOF
 #!/bin/sh
