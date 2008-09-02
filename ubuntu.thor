@@ -51,11 +51,22 @@ class Ubuntu < Thor
     
     puts "You will not be asked to enter anything else. I can finish up on my own."
     ask "Press ENTER to continue."
-        
-    system apt(%w(librmagick-ruby))
     
-    gems = %w(rails mongrel mongrel_cluster)
+    pkgs = %w(librmagick-ruby logrotate git-core git-svn)     
+    system apt(pkgs)
+    
+    gems = %w(rails mongrel mongrel_cluster god)
     system sudo("gem install #{gems.join(' ')}")
+    
+    File.open('/tmp/god.init') do |file|
+      file.write GOD_INIT_FILE
+    end
+    
+    system sudo("mv /tmp/god.init /etc/init.d/god")
+    system sudo("chmod +x /etc/init.d/god")
+    system "echo '/etc/god.conf' > /tmp/god"
+    system sudo("mv /tmp/god /etc/defaults/god")
+    system sudo("touch /etc/god.conf")
   end
   
   private
@@ -72,3 +83,65 @@ class Ubuntu < Thor
     sudo "aptitude -y -q install #{pkgs.flatten.join(' ')}"
   end
 end
+
+GOD_INIT_SCRIPT = <<EOF
+#!/bin/sh
+
+### BEGIN INIT INFO
+# Provides:             god
+# Required-Start:       $all
+# Required-Stop:        $all
+# Default-Start:        2 3 4 5
+# Default-Stop:         0 1 6
+# Short-Description:    God
+### END INIT INFO
+
+NAME=god
+DESC=god
+
+set -e
+
+# Make sure the binary and the config file are present before proceeding
+test -x /usr/bin/god || exit 0
+
+# Create this file and put in a variable called GOD_CONFIG, pointing to
+# your God configuration file
+test -f /etc/default/god && . /etc/default/god
+[ $GOD_CONFIG ] || exit 0
+
+. /lib/lsb/init-functions
+
+RETVAL=0
+
+case "$1" in
+  start)
+    echo -n "Starting $DESC: "
+    /usr/bin/god -c $GOD_CONFIG -P /var/run/god.pid -l /var/log/god.log
+    RETVAL=$?
+    echo "$NAME."
+    ;;
+  stop)
+    echo -n "Stopping $DESC: "
+    kill `cat /var/run/god.pid`
+    RETVAL=$?
+    echo "$NAME."
+    ;;
+  restart)
+    echo -n "Restarting $DESC: "
+    kill `cat /var/run/god.pid`
+    /usr/bin/god -c $GOD_CONFIG -P /var/run/god.pid -l /var/log/god.log
+    RETVAL=$?
+    echo "$NAME."
+    ;;
+  status)
+    /usr/bin/god status
+    RETVAL=$?
+    ;;
+  *)
+    echo "Usage: god {start|stop|restart|status}"
+    exit 1
+    ;;
+esac
+
+exit $RETVAL
+EOF
