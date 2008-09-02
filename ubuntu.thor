@@ -24,7 +24,7 @@ class Ubuntu < Thor
       ssh.exec!('tar zxvf rubygems-*.tgz')
       ssh.exec!('rm rubygems-*.tgz')
       ssh.exec!("cd rubygems-* && (#{sudo 'ruby setup.rb'}) && cd ..")
-      ssh.exec!('ln -s /usr/bin/gem1.8 /usr/bin/gem')
+      ssh.exec!(sudo 'ln -s /usr/bin/gem1.8 /usr/bin/gem')
       
       puts "Installing thor..."
       ssh.exec!(sudo 'gem install thor')
