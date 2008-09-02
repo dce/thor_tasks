@@ -53,12 +53,15 @@ class Ubuntu < Thor
     ask "Press ENTER to continue."
     
     passenger_root = `passenger-config --root`
-    File.open('passenger.conf', 'w') { |f|
-      f.write(APACHE_CONF.gsub(/_ROOT_/, passenger_root))
+    File.open('passenger.load', 'w') { |f|
+      f.write(PASSENGER_LOAD.gsub(/_ROOT_/, passenger_root))
     }
-    system sudo("mv passenger.conf /etc/apache2/mods-available/")
+    File.open('passenger.conf', 'w') { |f|
+      f.write(PASSENGER_CONF.gsub(/_ROOT_/, passenger_root))
+    }
+    system sudo("mv passenger.conf passenger.load /etc/apache2/mods-available/")
     system sudo("a2enmod passenger")
-    system sudo("apachectl reload")
+    system sudo("apache2ctl reload")
     
     pkgs = %w(librmagick-ruby logrotate git-core git-svn)     
     system apt(pkgs)
@@ -89,8 +92,9 @@ class Ubuntu < Thor
   end
 end
 
-APACHE_CONF = <<EOF
-LoadModule passenger_module _ROOT_/ext/apache2/mod_passenger.so
+
+PASSENGER_LOAD = "LoadModule passenger_module _ROOT_/ext/apache2/mod_passenger.so"
+PASSENGER_CONF = <<EOF
 PassengerRoot _ROOT_
 PassengerRuby /usr/bin/ruby1.8
 PassengerDefaultUser www-data
