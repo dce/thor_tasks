@@ -116,15 +116,15 @@ class Ubuntu < Thor
 end
 
 
-PASSENGER_LOAD ||= "LoadModule passenger_module ROOT/ext/apache2/mod_passenger.so\n"
-PASSENGER_CONF ||= <<EOF
+PASSENGER_LOAD = "LoadModule passenger_module ROOT/ext/apache2/mod_passenger.so\n"
+PASSENGER_CONF = <<EOF
 PassengerRoot ROOT
 PassengerRuby /usr/bin/ruby1.8
 PassengerDefaultUser www-data
 EOF
 
 
-GOD_INIT_SCRIPT ||= <<EOF
+GOD_INIT_SCRIPT = <<EOF
 #!/bin/sh
 
 ### BEGIN INIT INFO
