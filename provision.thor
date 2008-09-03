@@ -62,7 +62,7 @@ class Provision < Thor
     
     cap.task :install_ubuntu_env do
       pkgs = %w(build-essential libssl-dev libreadline5-dev zlib1g-dev 
-        curl logrotate git-core git-svn)
+        curl git-core git-svn)
       sudo 'aptitude update'
       sudo 'aptitude -y -q full-upgrade'
       sudo "aptitude -y -q install #{pkgs.join(' ')}"
@@ -96,11 +96,6 @@ class Provision < Thor
     
     cap.task :install_rails do
       sudo "gem install rails"
-    end
-    
-    cap.task :install_gems do
-      gems = %w(god)      
-      sudo "gem install #{gems.join(' ')}"
     end
     
     cap.task :install_passenger do
