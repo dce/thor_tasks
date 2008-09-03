@@ -17,7 +17,7 @@
 
 class Provision < Thor
   def initialize(*args)
-    raise "You must have provision_base installed." unless BASE_LOADED
+    raise "You must have provision_base installed." unless defined?(BASE_LOADED)
     super(*args)
   end
   
