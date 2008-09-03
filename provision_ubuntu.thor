@@ -1,7 +1,7 @@
-# module: provision
+# module: provision_ubuntu
 
-# This script is meant to be used to provision new servers for Rails and Rack 
-# apps using Phusion Passenger. 
+# This script is meant to be used to provision new Ubuntu servers for Rails 
+# and Rack apps using Phusion Passenger. 
 #
 # Things this does:
 # - installs Ruby and Rubygems
