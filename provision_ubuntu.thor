@@ -16,30 +16,21 @@
 # - installs god, and creates an init file for it
 
 class Provision < Thor
-  require 'highline/import'
-  require 'capistrano'
-  require 'capistrano/cli'
+  def initialize(*args)
+    raise "You must have provision_base installed." unless BASE_LOADED
+    super(*args)
+  end
   
   desc "ubuntu SERVER", "Remotely provision an Ubuntu server for " +
     "running Rails and Rack apps with Phusion Passenger. You must be in " +
     "the sudoers file on the remote server."
-  method_options :user => :optional, :password => :optional, :god => :boolean    
+  method_options :user => :optional, :god => :boolean    
   def ubuntu(server, opts)
     get_user_and_password(opts)        
     get_ubuntu_cap(server, opts).provision
   end
   
   private
-  
-  def get_user_and_password(opts)
-    opts['user'] = opts['user'] || \
-      ask("Enter your user name on the remote server: ") { 
-        |q| q.default = ENV['USER'] 
-      }
-      
-    opts['password'] = opts['password'] || \
-      ask("Enter your password on the remote server: ") { |q| q.echo = false }
-  end
   
   def get_ubuntu_cap(server, opts)
     cap = Capistrano::Configuration.new
@@ -76,6 +67,7 @@ class Provision < Thor
     cap.task :install_apache do
       pkgs = %w(apache2-mpm-prefork apache2-prefork-dev)
       sudo "aptitude -y -q install #{pkgs.join(' ')}"
+      sudo "a2enmod rewrite"
     end
     
     cap.task :install_mysql do
