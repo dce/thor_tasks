@@ -3,11 +3,11 @@
 class Audit < Thor
   desc "queries", "Audit the SQL queries run during this Rails app's test."
   method_options :units => :boolean, :v => :boolean
-  def queries(opts)
+  def queries
     File.unlink('log/test.log') if File.exist?('log/test.log')
     
-    test_cmd = opts['units'] ? "rake test:units" : "rake test"
-    test_cmd += " 1> /dev/null 2>&1" unless opts['v']
+    test_cmd = options['units'] ? "rake test:units" : "rake test"
+    test_cmd += " 1> /dev/null 2>&1" unless options['v']
     
     if system(test_cmd)
       %w(SELECT INSERT UPDATE DELETE).each do |sql|

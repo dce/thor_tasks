@@ -9,38 +9,38 @@ class Provision < Thor
   desc "apache SERVER DOMAIN", "Adds a virtual host config for DOMAIN " +
     "on the remote server SERVER."
   method_options(:user => :optional, :ip => :optional, :ssl => :boolean)
-  def apache(server, domain, opts)
+  def apache(server, domain)
     ip_regex = /\b(?:\d{1,3}\.){3}\d{1,3}$/ # not perfect, but works
-    get_user_and_password(opts)
+    get_user_and_password(options)
     
-    opts['ip'] = opts['ip'] || \
+    options['ip'] = options['ip'] || \
       ask("Enter the IP address for the virtual host: ") { 
         |q| q.default = `host -t A #{server}`.scan(ip_regex)[0] || server
       }
     
-    opts['docroot'] = opts['docroot'] || \
+    options['docroot'] = options['docroot'] || \
       ask("Enter the docroot for the virtual host: ") {
         |q| q.default = "/var/www/#{domain}"
       }
     
-    get_apache_cap(server, domain, opts).provision
+    get_apache_cap(server, domain, options).provision
   end
   
   private
   
-  def get_apache_cap(server, domain, opts)
+  def get_apache_cap(server, domain)
     cap = Capistrano::Configuration.new
     cap.logger.level = Capistrano::Logger::TRACE
-    cap.set :user, opts['user']
-    cap.set :password, opts['password']
+    cap.set :user, options['user']
+    cap.set :password, options['password']
     
     cap.role :app, server
     
     cap.task :provision do
       conf_text = APACHE_VHOST_CONF
-      conf_text += "\n\n#{APACHE_SSL_VHOST_CONF}" if opts[:ssl]
-      conf_text.gsub!('_IP_', opts['ip'])
-      conf_text.gsub!('_DOCROOT_', opts['docroot'])
+      conf_text += "\n\n#{APACHE_SSL_VHOST_CONF}" if options[:ssl]
+      conf_text.gsub!('_IP_', options['ip'])
+      conf_text.gsub!('_DOCROOT_', options['docroot'])
       
       apache_conf_dir = capture('apxs2 -q SYSCONFDIR')
       put conf_text, "/tmp/#{domain}"

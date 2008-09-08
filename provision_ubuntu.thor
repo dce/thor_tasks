@@ -25,18 +25,18 @@ class Provision < Thor
     "running Rails and Rack apps with Phusion Passenger. You must be in " +
     "the sudoers file on the remote server."
   method_options :user => :optional, :god => :boolean    
-  def ubuntu(server, opts)
-    get_user_and_password(opts)        
-    get_ubuntu_cap(server, opts).provision
+  def ubuntu(server)
+    get_user_and_password(options)        
+    get_ubuntu_cap(server, options).provision
   end
   
   private
   
-  def get_ubuntu_cap(server, opts)
+  def get_ubuntu_cap(server)
     cap = Capistrano::Configuration.new
     cap.logger.level = Capistrano::Logger::TRACE
-    cap.set :user, opts['user']
-    cap.set :password, opts['password']
+    cap.set :user, options['user']
+    cap.set :password, options['password']
     
     cap.role :app, server
     
@@ -48,7 +48,7 @@ class Provision < Thor
       install_mysql
       install_rails
       install_passenger
-      install_god if opts['god']
+      install_god if options['god']
     end
     
     cap.task :install_ubuntu_env do
