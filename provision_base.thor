@@ -10,12 +10,12 @@ class Provision < Thor
   private
   
   def get_user_and_password(opts)
-    opts['user'] = opts['user'] || \
+    @user = opts['user'] || \
       ask("Enter your user name on the remote server: ") { 
         |q| q.default = ENV['USER'] 
       }
       
-    opts['password'] = opts['password'] || \
+    @password = opts['password'] || \
       ask("Enter your password on the remote server: ") { |q| q.echo = false }
   end
 end

@@ -15,6 +15,9 @@
 # Optional:
 # - installs god, and creates an init file for it
 
+require 'open-uri'
+require 'hpricot'
+
 class Provision < Thor
   def initialize(*args)
     raise "You must have provision_base installed." unless defined?(BASE_LOADED)
@@ -27,7 +30,7 @@ class Provision < Thor
   method_options :user => :optional, :god => :boolean    
   def ubuntu(server)
     get_user_and_password(options)        
-    get_ubuntu_cap(server, options).provision
+    get_ubuntu_cap(server).provision
   end
   
   private
@@ -35,20 +38,17 @@ class Provision < Thor
   def get_ubuntu_cap(server)
     cap = Capistrano::Configuration.new
     cap.logger.level = Capistrano::Logger::TRACE
-    cap.set :user, options['user']
-    cap.set :password, options['password']
+    cap.set :user, @user
+    cap.set :password, @password
     
     cap.role :app, server
     
     cap.task :provision do
       install_ubuntu_env
       install_ruby
-      install_rubygems
       install_apache
       install_mysql
-      install_rails
       install_passenger
-      install_god if options['god']
     end
     
     cap.task :install_ubuntu_env do
@@ -60,8 +60,14 @@ class Provision < Thor
     end
     
     cap.task :install_ruby do
-      pkgs = %w(ruby ruby1.8-dev irb ri libopenssl-ruby librmagick-ruby)
-      sudo "aptitude -y -q install #{pkgs.join(' ')}"
+      # get latest Ruby Enterprise Edition
+      doc = open('http://rubyforge.org/frs/?group_id=5833') { |f| Hpricot(f) }
+      link = (doc/'a').detect { |link| link['href'] =~ /\.deb$/ }['href']
+
+      run "wget -nv http://rubyforge.org#{link}"
+      sudo "dpkg -i ruby-enterprise*.deb"
+
+      sudo "ln -s /opt/ruby-enterprise/bin/* /usr/local/bin/"
     end
     
     cap.task :install_apache do
@@ -74,25 +80,9 @@ class Provision < Thor
       pkgs = %w(libmysql++-dev mysql-server)
       sudo "aptitude -y -q install #{pkgs.join(' ')}"
     end
-    
-    cap.task :install_rubygems do
-      run 'wget -nv ' +
-        'http://rubyforge.org/frs/download.php/38646/rubygems-1.2.0.tgz'
-      run 'tar zxvf rubygems-*.tgz'
-      run 'rm rubygems-*.tgz'
-      run "cd rubygems-* && (sudo ruby setup.rb) && cd .."
-      sudo 'rm -f /usr/bin/gem'
-      sudo 'ln -s /usr/bin/gem1.8 /usr/bin/gem'
-      put 'gem: --no-ri --no-rdoc', '.gemrc'
-    end
-    
-    cap.task :install_rails do
-      sudo "gem install rails"
-    end
-    
+        
     cap.task :install_passenger do
-      sudo "gem install passenger"
-      sudo("/usr/bin/passenger-install-apache2-module", 
+      sudo("/opt/ruby-enterprise/bin/passenger-install-apache2-module", 
         :pty => true) do |ch,stream,out|
         next if out.chomp == ''
         print out
@@ -106,21 +96,9 @@ class Provision < Thor
       sudo "a2enmod passenger"
       sudo "/etc/init.d/apache2 force-reload"
     end
-    
-    cap.task :install_god do
-      sudo 'gem install god'
-      put GOD_INIT_SCRIPT, '/tmp/god.init'
-      sudo "mv /tmp/god.init /etc/init.d/god"
-      sudo "chmod +x /etc/init.d/god"
-      put '/etc/god.conf', '/tmp/default-god'
-      sudo 'mv /tmp/default-god /etc/default/god'
-      sudo 'touch /etc/god.conf'
-      sudo 'update-rc.d god defaults'
-    end
-    
+        
     cap
   end
-
   
   PASSENGER_LOAD = <<EOF
 LoadModule passenger_module ROOT/ext/apache2/mod_passenger.so
@@ -128,70 +106,8 @@ EOF
 
   PASSENGER_CONF = <<EOF
 PassengerRoot ROOT
-PassengerRuby /usr/bin/ruby1.8
+PassengerRuby /opt/ruby-enterprise/bin/ruby
 PassengerDefaultUser www-data
-EOF
-
-  GOD_INIT_SCRIPT = <<EOF
-#!/bin/sh
-
-### BEGIN INIT INFO
-# Provides:             god
-# Required-Start:       $all
-# Required-Stop:        $all
-# Default-Start:        2 3 4 5
-# Default-Stop:         0 1 6
-# Short-Description:    God
-### END INIT INFO
-
-NAME=god
-DESC=god
-
-set -e
-
-# Make sure the binary and the config file are present before proceeding
-test -x /usr/bin/god || exit 0
-
-# Create this file and put in a variable called GOD_CONFIG, pointing to
-# your God configuration file
-test -f /etc/default/god && . /etc/default/god
-[ $GOD_CONFIG ] || exit 0
-
-. /lib/lsb/init-functions
-
-RETVAL=0
-
-case "$1" in
-  start)
-    echo -n "Starting $DESC: "
-    /usr/bin/god -c $GOD_CONFIG -P /var/run/god.pid -l /var/log/god.log
-    RETVAL=$?
-    echo "$NAME."
-    ;;
-  stop)
-    echo -n "Stopping $DESC: "
-    kill `cat /var/run/god.pid`
-    RETVAL=$?
-    echo "$NAME."
-    ;;
-  restart)
-    echo -n "Restarting $DESC: "
-    kill `cat /var/run/god.pid`
-    /usr/bin/god -c $GOD_CONFIG -P /var/run/god.pid -l /var/log/god.log
-    RETVAL=$?
-    echo "$NAME."
-    ;;
-  status)
-    /usr/bin/god status
-    RETVAL=$?
-    ;;
-  *)
-    echo "Usage: god {start|stop|restart|status}"
-    exit 1
-    ;;
-esac
-
-exit $RETVAL
 EOF
 end
 
