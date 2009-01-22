@@ -62,11 +62,18 @@ class Provision < Thor
     cap.task :install_ruby do
       # get latest Ruby Enterprise Edition
       doc = open('http://rubyforge.org/frs/?group_id=5833') { |f| Hpricot(f) }
-      link = (doc/'a').detect { |link| link['href'] =~ /\.deb$/ }['href']
+      link = (doc/'a').detect { |link| link['href'] =~ /\.tar\.gz$/ }['href']
 
       run "wget -nv http://rubyforge.org#{link}"
-      sudo "dpkg -i ruby-enterprise*.deb"
+      run "tar xfz ruby-enterprise-*.tar.gz"
 
+      sudo("./ruby-enterprise-*/installer", :pty => true) do |ch,stream,out|
+        next if out.chomp == ''
+        print out
+        ch.send_data(input = "\n") if out =~ /enter/i
+      end
+
+      sudo "ln -s /opt/ruby-enterprise-* /opt/ruby-enterprise"
       sudo "ln -s /opt/ruby-enterprise/bin/* /usr/local/bin/"
     end
     
