@@ -13,12 +13,12 @@ class Provision < Thor
     ip_regex = /\b(?:\d{1,3}\.){3}\d{1,3}$/ # not perfect, but works
     get_user_and_password(options)
     
-    options['ip'] = options['ip'] || \
+    @ip = options['ip'] || \
       ask("Enter the IP address for the virtual host: ") { 
         |q| q.default = `host -t A #{server}`.scan(ip_regex)[0] || server
       }
     
-    options['docroot'] = options['docroot'] || \
+    @docroot = options['docroot'] || \
       ask("Enter the docroot for the virtual host: ") {
         |q| q.default = "/var/www/#{domain}"
       }
@@ -39,8 +39,8 @@ class Provision < Thor
     cap.task :provision do
       conf_text = APACHE_VHOST_CONF
       conf_text += "\n\n#{APACHE_SSL_VHOST_CONF}" if options[:ssl]
-      conf_text.gsub!('_IP_', options['ip'])
-      conf_text.gsub!('_DOCROOT_', options['docroot'])
+      conf_text.gsub!('_IP_', @ip)
+      conf_text.gsub!('_DOCROOT_', @docroot)
       
       apache_conf_dir = capture('apxs2 -q SYSCONFDIR')
       put conf_text, "/tmp/#{domain}"
