@@ -23,7 +23,7 @@ class Provision < Thor
         |q| q.default = "/var/www/#{domain}"
       }
     
-    get_apache_cap(server, domain, options).provision
+    get_apache_cap(server, domain).provision
   end
   
   private
@@ -31,8 +31,8 @@ class Provision < Thor
   def get_apache_cap(server, domain)
     cap = Capistrano::Configuration.new
     cap.logger.level = Capistrano::Logger::TRACE
-    cap.set :user, options['user']
-    cap.set :password, options['password']
+    cap.set :user, @user
+    cap.set :password, @password
     
     cap.role :app, server
     
