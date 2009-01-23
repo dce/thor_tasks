@@ -23,24 +23,29 @@ class Provision < Thor
         |q| q.default = "/var/www/#{domain}"
       }
     
-    get_apache_cap(server, domain).provision
+    get_apache_cap(server, domain, options).provision
   end
   
   private
   
-  def get_apache_cap(server, domain)
+  def get_apache_cap(server, domain, options)
     cap = Capistrano::Configuration.new
     cap.logger.level = Capistrano::Logger::TRACE
+
     cap.set :user, @user
     cap.set :password, @password
     
     cap.role :app, server
     
+    # used to make closure below work
+    ip = @ip
+    docroot = @docroot
+    
     cap.task :provision do
       conf_text = APACHE_VHOST_CONF
       conf_text += "\n\n#{APACHE_SSL_VHOST_CONF}" if options[:ssl]
-      conf_text.gsub!('_IP_', @ip)
-      conf_text.gsub!('_DOCROOT_', @docroot)
+      conf_text.gsub!('_IP_', ip)
+      conf_text.gsub!('_DOCROOT_', docroot)
       
       apache_conf_dir = capture('apxs2 -q SYSCONFDIR')
       put conf_text, "/tmp/#{domain}"
